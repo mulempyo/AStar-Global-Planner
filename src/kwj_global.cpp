@@ -27,20 +27,11 @@ namespace astar_planner {
     }
 
     AStarPlanner::~AStarPlanner() {
-        for (Node* node : allocated_nodes_) {
-            delete node;
-        }
-        allocated_nodes_.clear();
+   
        if(neighbor)
          delete neighbor;
        if(start_node)
          delete start_node;
-    }
-
-    Node* AStarPlanner::createNode(unsigned int x, unsigned int y, double g_cost, double h_cost, Node* parent) {
-        Node* node = new Node(x, y, g_cost, h_cost, parent);
-        allocated_nodes_.push_back(node);  
-        return node;
     }
 
     void AStarPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros) {
@@ -137,7 +128,7 @@ namespace astar_planner {
         std::priority_queue<Node*, std::vector<Node*>, CompareNodes> open_list;
         std::unordered_set<Node, Node::HashFunction> closed_set;
 
-        Node* start_node = createNode(start_x, start_y, 0.0, heuristic(start_x, start_y, goal_x, goal_y), nullptr);
+        Node* start_node = new Node(start_x, start_y, 0.0, heuristic(start_x, start_y, goal_x, goal_y), nullptr);
         open_list.push(start_node);
 
         while (!open_list.empty()) {
@@ -180,7 +171,7 @@ namespace astar_planner {
                 if (nx >= 0 && ny >= 0 && nx < static_cast<int>(width_) && ny < static_cast<int>(height_) &&
                     costmap_->getCost(nx, ny) < costmap_2d::INSCRIBED_INFLATED_OBSTACLE) {
                     double h = heuristic(nx, ny, goal_x_, goal_y_);
-                    Node* neighbor = createNode(nx, ny, std::numeric_limits<double>::infinity(), h, node);
+                    Node* neighbor = new Node(nx, ny, std::numeric_limits<double>::infinity(), h, node);
                     neighbors.push_back(neighbor);
                 }
             }
@@ -200,8 +191,30 @@ namespace astar_planner {
         return path;
     }
 
+    double AStarPlanner::potentialFieldCost(unsigned int x, unsigned int y) const {
+        double cost = 0.0;
+        for (int dx = -2; dx <= 2; ++dx) {
+            for (int dy = -2; dy <= 2; ++dy) {
+                int nx = static_cast<int>(x) + dx;
+                int ny = static_cast<int>(y) + dy;
+                if (nx >= 0 && ny >= 0 && nx < static_cast<int>(width_) && ny < static_cast<int>(height_)) {
+                    double distance_to_obstacle = std::hypot(dx, dy);
+                    if (distance_to_obstacle > 0.0) {
+                        double obstacle_cost = costmap_->getCost(nx, ny);
+                        if (obstacle_cost == costmap_2d::LETHAL_OBSTACLE) {
+                            cost += 1.0 / distance_to_obstacle;  
+                        }
+                    }
+                }
+            }
+        }
+        return cost;
+    }
+
     double AStarPlanner::heuristic(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2) const {
-        return std::hypot(static_cast<double>(x2 - x1), static_cast<double>(y2 - y1));
+        double euclidean_distance = std::hypot(static_cast<double>(x2 - x1), static_cast<double>(y2 - y1));
+        double potential_cost = potentialFieldCost(x1, y1);
+        return euclidean_distance + potential_cost;
     }
 
     double AStarPlanner::distance(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2) const {
