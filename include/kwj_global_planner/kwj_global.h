@@ -46,7 +46,6 @@ namespace astar_planner {
         AStarPlanner(std::string name, costmap_2d::Costmap2DROS* costmap_ros);
         ~AStarPlanner();
 
-        Node* createNode(unsigned int x, unsigned int y, double g_cost, double h_cost, Node* parent);
         void initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros) override;
         bool makePlan(const geometry_msgs::PoseStamped& start, 
                       const geometry_msgs::PoseStamped& goal, 
@@ -70,6 +69,7 @@ namespace astar_planner {
         std::vector<Node*> aStarSearch(unsigned int start_x, unsigned int start_y, unsigned int goal_x, unsigned int goal_y);
         std::vector<Node*> getNeighbors(Node* node);
         std::vector<Node*> reconstructPath(Node* goal_node);
+        double potentialFieldCost(unsigned int x, unsigned int y) const;
         double heuristic(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2) const;
         double distance(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2) const;
         void mapToWorld(unsigned int mx, unsigned int my, double& wx, double& wy) const;
