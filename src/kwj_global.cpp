@@ -224,4 +224,3 @@ namespace astar_planner {
         wy = origin_y_ + my * resolution_;
     }
 };
-
