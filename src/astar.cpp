@@ -13,8 +13,7 @@
 #include <algorithm>
 #include <unordered_set>
 #include <mutex>
-#include <costmap_update/costmap_update.h>
-
+#include <thread>
 
 // Register the A* planner as a plugin
 PLUGINLIB_EXPORT_CLASS(astar_planner::AStarPlanner, nav_core::BaseGlobalPlanner)
@@ -47,12 +46,11 @@ namespace astar_planner {
         }
     }
 
-
     bool AStarPlanner::makePlan(const geometry_msgs::PoseStamped& start, 
                                 const geometry_msgs::PoseStamped& goal, 
                                 std::vector<geometry_msgs::PoseStamped>& plan) {
         boost::mutex::scoped_lock lock(mutex_); 
-        
+
         if (!initialized_) {
             ROS_ERROR("AStarPlanner has not been initialized, please call initialize() before use.");
             return false;
@@ -227,4 +225,3 @@ namespace astar_planner {
         wy = origin_y_ + my * resolution_;
     }
 };
-

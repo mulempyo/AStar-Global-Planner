@@ -10,7 +10,7 @@
 #include <boost/thread/mutex.hpp>
 #include <memory>
 #include <unordered_map>
-#include <costmap_update/costmap_update.h>
+#include <thread>
 
 namespace astar_planner {
 
@@ -25,20 +25,17 @@ namespace astar_planner {
         bool makePlan(const geometry_msgs::PoseStamped& start, 
                       const geometry_msgs::PoseStamped& goal, 
                       std::vector<geometry_msgs::PoseStamped>& plan) override;
-
         ros::Publisher plan_pub_;
         std::string global_frame_;
 
     private:
         costmap_2d::Costmap2D* costmap_;
-        costmap_2d::Costmap2DROS* global_costmap_ros_;
         bool initialized_;
         double origin_x_, origin_y_, resolution_;
         unsigned int width_, height_;
         unsigned int goal_x_, goal_y_;
 
         boost::mutex mutex_;
-        update::MapUpdate update_;
   
         void publishPlan(const std::vector<geometry_msgs::PoseStamped>& path);
         std::vector<unsigned int> aStarSearch(unsigned int start_x, unsigned int start_y, unsigned int goal_x, unsigned int goal_y);
