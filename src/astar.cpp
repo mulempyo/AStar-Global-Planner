@@ -13,7 +13,6 @@
 #include <algorithm>
 #include <unordered_set>
 #include <mutex>
-#include <costmap_2d/costmap_update.h>
 #include <thread>
 
 // Register the A* planner as a plugin
@@ -28,11 +27,7 @@ namespace astar_planner {
         initialize(name, costmap_ros);
     }
 
-    AStarPlanner::~AStarPlanner() {
-      if (costmap_update_thread_.joinable()) {
-        costmap_update_thread_.join();
-    }
-   }
+    AStarPlanner::~AStarPlanner() {}
 
     void AStarPlanner::initialize(std::string name, costmap_2d::Costmap2DROS* costmap_ros) {
         if (!initialized_) {
@@ -45,23 +40,10 @@ namespace astar_planner {
             width_ = costmap_->getSizeInCellsX();
             height_ = costmap_->getSizeInCellsY();
             global_frame_ = costmap_ros->getGlobalFrameID();
-            costmap_update_thread_ = std::thread(&AStarPlanner::costmapUpdateThread, this);
             initialized_ = true;
         } else {
             ROS_WARN("This planner has already been initialized, doing nothing.");
         }
-    }
-
-    void AStarPlanner::costmapUpdateThread() {
-    ros::Rate rate(10); // 10 Hz
-    while (ros::ok()) {
-        if (costmap_) {
-            boost::mutex::scoped_lock lock(mutex_);
-            update_.updateCostmap(costmap_);
-            ROS_INFO("Costmap updated in thread.");
-        }
-        rate.sleep();
-      }
     }
 
     bool AStarPlanner::makePlan(const geometry_msgs::PoseStamped& start, 
